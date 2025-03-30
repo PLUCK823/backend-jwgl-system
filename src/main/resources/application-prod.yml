@@ -1,0 +1,7 @@
+# 生产环境特定配置
+
+# 启用方法级别的安全验证
+spring:
+  security:
+    method:
+      enabled: true
