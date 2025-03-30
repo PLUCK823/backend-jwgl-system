@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.hz.backend.mapper.TeachingResourceMapper">
+
+    <!-- 教学资源VO映射 -->
+    <resultMap id="ResourceVoMap" type="org.hz.backend.model.vo.TeachingResourceVo">
+        <id property="id" column="id" />
+        <result property="resourceName" column="resource_name" />
+        <result property="resourceType" column="resource_type" />
+        <result property="resourceUrl" column="resource_url" />
+        <result property="fileSize" column="file_size" />
+        <result property="courseId" column="course_id" />
+        <result property="courseName" column="course_name" />
+        <result property="teacherId" column="teacher_id" />
+        <result property="teacherName" column="teacher_name" />
+        <result property="downloadCount" column="download_count" />
+        <result property="status" column="status" />
+        <result property="createTime" column="create_time" />
+        <result property="updateTime" column="update_time" />
+    </resultMap>
+    
+    <!-- 基础查询列 -->
+    <sql id="Base_Column_List">
+        r.id, r.resource_name, r.resource_type, r.resource_url, r.file_size, 
+        r.course_id, r.teacher_id, r.download_count, r.status, r.create_time, r.update_time
+    </sql>
+    
+    <!-- 带关联表的查询列 -->
+    <sql id="Join_Column_List">
+        r.id, r.resource_name, r.resource_type, r.resource_url, r.file_size, 
+        r.course_id, c.course_name, r.teacher_id, t.real_name as teacher_name, 
+        r.download_count, r.status, r.create_time, r.update_time
+    </sql>
+    
+    <!-- 分页查询教学资源 -->
+    <select id="pageResources" resultMap="ResourceVoMap">
+        SELECT
+        <include refid="Join_Column_List" />
+        FROM teaching_resource r
+        LEFT JOIN course c ON r.course_id = c.id
+        LEFT JOIN teacher t ON r.teacher_id = t.id
+        <where>
+            <if test="resourceName != null and resourceName != ''">
+                AND r.resource_name LIKE CONCAT('%', #{resourceName}, '%')
+            </if>
+            <if test="resourceType != null and resourceType != ''">
+                AND r.resource_type = #{resourceType}
+            </if>
+            <if test="courseId != null">
+                AND r.course_id = #{courseId}
+            </if>
+            <if test="teacherId != null">
+                AND r.teacher_id = #{teacherId}
+            </if>
+        </where>
+        ORDER BY r.create_time DESC
+    </select>
+    
+    <!-- 根据ID查询教学资源详情 -->
+    <select id="getResourceById" resultMap="ResourceVoMap">
+        SELECT
+        <include refid="Join_Column_List" />
+        FROM teaching_resource r
+        LEFT JOIN course c ON r.course_id = c.id
+        LEFT JOIN teacher t ON r.teacher_id = t.id
+        WHERE r.id = #{id}
+    </select>
+    
+    <!-- 更新资源下载次数 -->
+    <update id="incrementDownloadCount">
+        UPDATE teaching_resource 
+        SET download_count = download_count + 1
+        WHERE id = #{id}
+    </update>
+    
+    <!-- 查询教师上传的资源列表 -->
+    <select id="listByTeacher" resultMap="ResourceVoMap">
+        SELECT
+        <include refid="Join_Column_List" />
+        FROM teaching_resource r
+        LEFT JOIN course c ON r.course_id = c.id
+        LEFT JOIN teacher t ON r.teacher_id = t.id
+        WHERE r.teacher_id = #{teacherId}
+        ORDER BY r.create_time DESC
+    </select>
+    
+    <!-- 查询课程相关的资源列表 -->
+    <select id="listByCourse" resultMap="ResourceVoMap">
+        SELECT
+        <include refid="Join_Column_List" />
+        FROM teaching_resource r
+        LEFT JOIN course c ON r.course_id = c.id
+        LEFT JOIN teacher t ON r.teacher_id = t.id
+        WHERE r.course_id = #{courseId}
+        ORDER BY r.create_time DESC
+    </select>
+    
+</mapper>
