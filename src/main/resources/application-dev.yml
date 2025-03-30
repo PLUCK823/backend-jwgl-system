@@ -1,0 +1,7 @@
+# 开发环境特定配置
+
+# 禁用方法级别的安全验证
+spring:
+  security:
+    method:
+      enabled: false
