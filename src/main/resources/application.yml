@@ -1,35 +1,74 @@
-# 数据库配置
 spring:
+  application:
+    name: backend
+  # 设置当前激活的环境
+  # dev: 开发环境 - 禁用安全验证，方便测试接口
+  # prod: 生产环境 - 启用完整的安全验证，保护API安全
+  # 将此处改为prod即可切换到生产环境，方法安全性将自动启用
+  profiles:
+    active: dev
+  # 允许循环依赖
+  main:
+    allow-circular-references: true
+  # 数据库配置
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://192.168.113.100:3306/jwgl_system?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
     username: root
     password: 232918
   # Redis 配置
-  redis:
-    host: 192.168.113.100
-    port: 6379
-    password:
-  # 文件上传配置
+  data:
+    redis:
+      host: 192.168.113.100
+      port: 6379
+      database: 0
+      timeout: 5000
+      lettuce:
+        pool:
+          max-active: 8
+          max-wait: -1
+          max-idle: 8
+          min-idle: 0
+  # 设置上传文件大小限制
   servlet:
     multipart:
-      max-file-size: 10MB
+      max-file-size: 50MB
       max-request-size: 50MB
+  # 邮件服务配置
+  mail:
+    host: smtp.163.com
+    port: 465
+    username: your_email@163.com
+    password: your_email_password
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          ssl:
+            enable: true
+    default-encoding: UTF-8
 
 # MyBatis-Plus 配置
 mybatis-plus:
   mapper-locations: classpath:mapper/*.xml
-  typeAliasesPackage: org.hz.backend.model.entity
+  type-aliases-package: org.hz.backend.model.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    cache-enabled: false
   global-config:
     db-config:
-      id-type: auto
+      id-type: AUTO
       logic-delete-field: deleted
       logic-delete-value: 1
       logic-not-delete-value: 0
-  configuration:
-    map-underscore-to-camel-case: true
-    cache-enabled: false
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    banner: false
+  # 禁用Lambda表达式反射优化，避免反射警告
+  configuration-properties:
+    useDeprecatedExecutor: false
 
 # MinIO 配置
 minio:
@@ -38,32 +77,21 @@ minio:
   secret-key: minioadmin
   bucket-name: jwgl-system
 
-# 服务器配置
+# 服务端口配置
 server:
   port: 8080
   servlet:
-    context-path: /api
-
-# JWT 配置
-jwt:
-  secret: your-secret-key-for-jwgl-system-application-2025
-  expiration: 86400000  # 一天(毫秒)
-  header: Authorization
-  token-prefix: Bearer 
-
-# OpenAPI 配置
-springdoc:
-  api-docs:
-    path: /api-docs
-  swagger-ui:
-    path: /swagger-ui.html
-    enabled: true
-  packages-to-scan: org.hz.backend.controller
+    context-path:
 
 # 日志配置
 logging:
   level:
     root: info
     org.hz.backend: debug
+    # 将MyBatis-Plus反射警告降级为ERROR以下，避免显示警告
+    com.baomidou.mybatisplus.core.toolkit.support: error
   file:
-    name: logs/application.log
+    name: logs/backend.log
+# 方法级别安全配置在各环境配置文件中单独配置
+# 开发环境(dev): method.security.enabled=false - 禁用方法安全性(PreAuthorize注解)
+# 生产环境(prod): method.security.enabled=true - 启用方法安全性(PreAuthorize注解)
